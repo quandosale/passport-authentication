@@ -7,6 +7,7 @@ var logger = require('morgan'),
     passport = require('passport'),
     mongoose = require('mongoose'),
     config = require('./common/config'),
+    ExpressBrute = require('express-brute');
 bodyParser = require('body-parser');
 
 var app = express();
@@ -17,12 +18,9 @@ dotenv.load();
  * Configure express app
  */
 
-app.use(bodyParser.urlencoded({
-    extended: true
-}));
+app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(cors());
-
 app.use(function (err, req, res, next) {
     if (err.name === 'StatusError') {
         res.send(err.status, err.message);
@@ -32,7 +30,6 @@ app.use(function (err, req, res, next) {
         next(err);
     }
 });
-
 app.use(passport.initialize());
 app.use(passport.session());
 
@@ -45,14 +42,29 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 /**
- * Define APIi routes
+ * Define API routes
  */
 
-app.use('/auth', require('./api/authentication')(passport));
-app.use('/sample1', passport.authenticate('bearer', { session: false }), require('./api/sample1'));
-app.use('/sample2', passport.authenticate('bearer', { session: false }), require('./api/sample2'));
-app.use('/sample3', passport.authenticate('bearer', { session: false }), require('./api/sample3'));
+var store = new ExpressBrute.MemoryStore();
+var bruteforce = new ExpressBrute(store, {
+    minWait: 1000 * 60 * 10,
+    failCallback: (req, res, next, nextValidRequestDate) => {
+        res.send("Please try again at " + nextValidRequestDate);
+    }
+});
 
+// Prevent brute-force on authentication api
+app.use('/auth', bruteforce.prevent, require('./api/authentication')(passport));
+
+// Prevent unauthorized calls using Bearer
+app.use(passport.authenticate('bearer', { session: false }));
+app.use('/sample1', require('./api/sample1'));
+app.use('/sample2', require('./api/sample2'));
+app.use('/sample3', require('./api/sample3'));
+
+app.get('/test', (req, res) => {
+    res.send('aaa');
+})
 /**
  * Creating server on specified port.
  */
