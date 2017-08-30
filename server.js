@@ -52,12 +52,13 @@ var bruteforce = new ExpressBrute(store, {
         res.send("Please try again at " + nextValidRequestDate);
     }
 });
-
 // Prevent brute-force on authentication api
 app.use('/auth', bruteforce.prevent, require('./api/authentication')(passport));
 
-// Prevent unauthorized calls using Bearer
+// Prevent unauthorized calls using Bearer 
 app.use(passport.authenticate('bearer', { session: false }));
+
+// All routes should be defined below to protect any call without authentication
 app.use('/sample1', require('./api/sample1'));
 app.use('/sample2', require('./api/sample2'));
 app.use('/sample3', require('./api/sample3'));
@@ -65,6 +66,8 @@ app.use('/sample3', require('./api/sample3'));
 app.get('/test', (req, res) => {
     res.send('aaa');
 })
+
+
 /**
  * Creating server on specified port.
  */
