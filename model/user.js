@@ -1,30 +1,10 @@
-var records = [
-    { id: 1, username: 'jack', token: '123456789', displayName: 'Jack', emails: [ { value: 'jack@example.com' } ] }
-  , { id: 2, username: 'jill', token: 'abcdefghi', displayName: 'Jill', emails: [ { value: 'jill@example.com' } ] }
-];
+var mongoose = require('mongoose');
+var ObjectID = mongoose.SchemaTypes.ObjectId;
 
-exports.findByToken = function (token, cb) {
-    process.nextTick(function () {
-        for (var i = 0, len = records.length; i < len; i++) {
-            var record = records[i];
-            if (record.token === token) {
-                return cb(null, record);
-            }
-        }
-        return cb(null, null);
-    });
-}
+var userSchema = new mongoose.Schema({
+    email: String,
+    password: String,
+    token: String
+});
 
-exports.findOne = function (user, cb) {
-    console.log(user);
-    process.nextTick(function () {
-        for (var i = 0, len = records.length; i < len; i++) {
-            var record = records[i];
-            console.log(record.username, user);
-            if (record.username == user.username) {
-                return cb(null, record);
-            }
-        }
-        return cb(null, null);
-    });
-}
+var Model = module.exports = mongoose.model('User', userSchema);
